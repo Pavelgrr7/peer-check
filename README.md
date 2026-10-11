@@ -6,6 +6,5 @@
 ## Доска с задачами:
 [Открыть Kanban-доску в GitHub Projects](https://github.com/users/Pavelgrr7/projects/2)
 
-## Документация и гайды по Git:
-- [Первоначальная настройка окружения и основы Git](https://github.com/Pavelgrr7/peer-check/blob/main/docs/git_guide.md)
-- [Повседневная работа: от создания ветки до Pull Request](https://github.com/Pavelgrr7/peer-check/blob/main/docs/daily_workflow_guide.md)
+## Документация по Git:
+- [Инструкция по настройке окружения и работе с Git (Спринт 1)](docs/git_guide.md)
