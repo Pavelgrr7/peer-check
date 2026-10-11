@@ -4,7 +4,7 @@
 3. Запустить приложение: `streamlit run app.py`
 
 ## Доска с задачами:
-[Тык](https://github.com/users/Pavelgrr7/projects/2)
+[Открыть Kanban-доску в GitHub Projects](https://github.com/users/Pavelgrr7/projects/2)
 
-## Гайд по работе с гитом:
-[Тык](https://github.com/Pavelgrr7/peer-check/blob/main/docs/git_guide.md)
+## Документация по Git:
+- [Инструкция по настройке окружения и работе с Git (Спринт 1)](docs/git_guide.md)
