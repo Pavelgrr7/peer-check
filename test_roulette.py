@@ -67,9 +67,9 @@ def run_tests():
         print("[5/5] Ошибка: валидатор пропустил неверное количество оценок или значения вне [1..5]")
 
     if passed == total_tests:
-        print("Тесты успешно пройдены. Можно делать коммит и пуш в github")
+        print(f"Все тесты пройдены успешно ({passed}/{total_tests}). Можно делать коммит и пуш в GitHub")
     else:
-        print(f"Пройдено тестов: {passed}/{total_tests}. Поправь код в roulette.py и запустите снова.")
+        print(f"Пройдено тестов: {passed}/{total_tests}. Поправь код в roulette.py и запусти снова.")
 
 
 if __name__ == "__main__":
