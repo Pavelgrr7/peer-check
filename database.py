@@ -2,6 +2,9 @@
 Модуль работы с базой данных SQLite.
 Отвечает за хранение сданных работ и рецензий.
 """
+import sqlite3
+
+DB_NAME = "peercheck.db"
 
 # В следующем спринте мы подключим библиотеку sqlite3 или peewee
 
@@ -22,8 +25,21 @@
 # - created_at: дата проверки (str/datetime)
 
 def init_db():
-    """Инициализация таблиц базы данных при первом запуске."""
-    print("[DB] База данных инициализирована (заглушка)")
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute(
+    """CREATE TABLE IF NOT EXISTS submissions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    lab_number INTEGER NOT NULL,
+    file_path TEXT NOT NULL,
+    student_token TEXT,
+    is_reviewed INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
+
+    conn.commit()
+    conn.close()
+    print("База данных и таблица submissions успешно созданы!")
 
 if __name__ == "__main__":
     init_db()
