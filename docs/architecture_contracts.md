@@ -8,6 +8,14 @@
 
 ---
 
+## 0. Как устроена анонимность
+
+Студент **не придумывает** себе никнейм: по знакомому нику однокурсники могут узнать автора работы. При сдаче работы система сама выдаёт случайный псевдоним (`generate_pseudonym()`, например `Скрытный Енот #427`) и показывает его студенту. Студент сохраняет его и потом вводит, чтобы проверить чужую работу или посмотреть отзывы на свою.
+
+Этот псевдоним и есть `student_token` в базе и во всех функциях ниже.
+
+---
+
 ## 1. База данных SQLite (`peercheck.db`)
 
 ### Таблица `submissions`: сданные работы (Спринт 2)
@@ -16,7 +24,7 @@ CREATE TABLE IF NOT EXISTS submissions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     lab_number INTEGER NOT NULL,            -- Номер лабораторной (например, 1)
     file_path TEXT NOT NULL,                -- Путь к файлу на диске ("uploads/...")
-    student_token TEXT,                     -- Никнейм автора ("user_123")
+    student_token TEXT,                     -- Псевдоним автора ("Скрытный Енот #427")
     is_reviewed INTEGER DEFAULT 0,          -- 0 — ждёт проверки, 1 — проверена
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Время загрузки
 );
@@ -27,7 +35,7 @@ CREATE TABLE IF NOT EXISTS submissions (
 CREATE TABLE IF NOT EXISTS reviews (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     lab_id INTEGER NOT NULL,                -- Ссылка на submissions(id)
-    reviewer_token TEXT NOT NULL,           -- Никнейм рецензента
+    reviewer_token TEXT NOT NULL,           -- Псевдоним рецензента
     c1_score INTEGER NOT NULL,              -- Оценка по критерию 1 (1–5)
     c2_score INTEGER NOT NULL,              -- Оценка по критерию 2 (1–5)
     c3_score INTEGER NOT NULL,              -- Оценка по критерию 3 (1–5)
@@ -57,11 +65,12 @@ def add_submission(student_token: str, lab_number: int, file_path: str) -> int:
     """Добавляет запись о сданной работе в submissions. Возвращает id новой записи."""
 
 
-def get_all_submissions() -> list[dict]:
+def get_unreviewed_submissions() -> list[dict]:
     """
-    Возвращает все сданные работы списком словарей:
-    [{"id": 1, "student_token": "user_123", "lab_number": 1,
-      "file_path": "uploads/...", "is_reviewed": 0}, ...]
+    Возвращает непроверенные работы (is_reviewed = 0) списком словарей
+    в формате, который ждёт select_lab_for_review:
+    [{"id": 1, "student_token": "Скрытный Енот #427", "lab_number": 1,
+      "file_path": "uploads/..."}, ...]
     Если работ нет, возвращает [].
     """
 ```
@@ -70,7 +79,7 @@ def get_all_submissions() -> list[dict]:
 
 ## 3. `roulette.py`
 
-Сигнатуры `select_lab_for_review` и `validate_review` проверяет `test_roulette.py`, менять их нельзя.
+Сигнатуры функций проверяет `test_roulette.py`, менять их нельзя.
 
 ```python
 import random
@@ -95,6 +104,20 @@ def validate_review(ratings: list[int], comment: str) -> tuple[bool, str]:
     """
 
 
+def generate_pseudonym() -> str:
+    """
+    Возвращает случайный псевдоним вида "Прилагательное Животное #число",
+    число от 100 до 999. Пример: "Скрытный Енот #427".
+    """
+
+
+def calculate_final_score(ratings: list[int]) -> float:
+    """
+    Средний балл по оценкам, округлённый до 1 знака: [5, 4, 5, 3, 4] -> 4.2.
+    Для пустого списка возвращает 0.0.
+    """
+
+
 def can_view_own_reviews(current_user_token: str) -> bool:
     """
     Проверил ли студент хотя бы одну чужую работу (тогда ему открываются отзывы на свою).
@@ -108,6 +131,6 @@ def can_view_own_reviews(current_user_token: str) -> bool:
 
 1. **Настройка страницы:** `st.set_page_config(page_title="PeerCheck", page_icon="📝", layout="wide")`.
 2. **Разделы в боковом меню** (`st.sidebar.radio`):
-   * «Сдать лабораторную»: поле никнейма, номер работы, чекбокс анонимности, загрузка PDF (до 15 МБ).
-   * «Проверить чужую работу»: вызов `select_lab_for_review`, сплит-экран (PDF слева, 5 оценок и комментарий справа).
-   * «Мои отзывы»: оценки на свою работу после выполнения своей проверки.
+   * «Сдать лабораторную»: номер работы, чекбокс анонимности, загрузка PDF (до 15 МБ). **Поля никнейма нет.** После успешной отправки показывается псевдоним из `generate_pseudonym()` с просьбой его сохранить.
+   * «Проверить чужую работу»: студент вводит свой псевдоним, вызов `select_lab_for_review`, сплит-экран (PDF слева, 5 оценок и комментарий справа).
+   * «Мои отзывы»: студент вводит свой псевдоним и видит оценки на свою работу (после выполнения своей проверки).
