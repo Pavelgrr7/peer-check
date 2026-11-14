@@ -81,6 +81,40 @@ def validate_review(ratings: list[int], comment: str) -> tuple[bool, str]:
 
     return (True, "OK") #Всё заполнено честно
 
+def generate_pseudonym() -> str:
+    """
+    Генерирует случайный анонимный псевдоним вида: 'Прилагательное Животное #Число'.
+    Пример: 'Скрытный Енот #427'
+    """
+    adjectives = [
+        'Быстрый', 'Умный', 'Скрытный', 'Весёлый',
+        'Логичный', 'Анонимный', 'Хитрый', 'Отважный',
+    ]
+
+    animals = [
+        'Енот', 'Кот', 'Пингвин', 'Бобёр',
+        'Хакер', 'Сова', 'Лис', 'Волк',
+    ]
+
+    adjective = random.choice(adjectives)
+    animal = random.choice(animals)
+    number = random.randint(100, 999)
+
+    return f"{adjective} {animal} #{number}"
+
+def calculate_final_score(ratings: list[int]) -> float:
+    """
+    Вычисляет средний балл по списку оценок и округляет его до 1 знака после запятой.
+
+    :param ratings: Список оценок от рецензента, например: [5, 4, 5, 3, 4]
+    :return: Среднее арифметическое (float), например: 4.2
+
+    Важно: если список ratings пустой, функция должна возвращать 0.0,
+    чтобы программа не упала с ошибкой деления на ноль (ZeroDivisionError).
+    """
+    if not ratings:
+        return 0.0
+    return round(sum(ratings) / len(ratings), 1)
 
 if __name__ == "__main__":
     labs = [
@@ -89,3 +123,11 @@ if __name__ == "__main__":
     ]
     print("Работа для egor:", select_lab_for_review("egor", labs))
     print("Отписка:", validate_review([5, 5, 5, 5, 5], "норм"))
+
+    print("\nПроверка генерации псевдонимов и подсчёта средней оценки")
+    print("Сгенерированный псевдоним 1:", generate_pseudonym())
+    print("Сгенерированный псевдоним 2:", generate_pseudonym())
+
+    sample_ratings = [5, 4, 5, 3, 4]
+    print(f"Оценки: {sample_ratings} -> Средний балл:", calculate_final_score(sample_ratings))
+    print("Пустой список -> Средний балл:", calculate_final_score([]))
