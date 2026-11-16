@@ -64,7 +64,6 @@ def get_unreviewed_submissions() -> list[dict]:
     в виде списка словарей для алгоритма рулетки.
     """
     conn = sqlite3.connect(DB_NAME)
-    # Эта настройка позволяет обращаться к колонкам по именам, как к словарю:
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
