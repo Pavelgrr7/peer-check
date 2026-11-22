@@ -2,7 +2,7 @@
 Модуль бизнес-логики сервиса PeerCheck.
 Отвечает за правила назначения работ и проверки доступа.
 """
-
+import os
 import random
 
 
@@ -30,19 +30,16 @@ def select_lab_for_review(current_user_token: str, available_labs: list[dict]) -
     return random.choice(candidates) #Выбираем случайную работу
 
 
-def can_view_own_reviews(current_user_token: str) -> bool:
+def can_view_own_reviews(submitted_count: int, reviewed_count: int) -> bool:
     """
-    Проверяет, имеет ли право студент смотреть отзывы на свою работу.
+    Проверяет, имеет ли право студент смотреть отзывы на свои работы.
 
     Правило:
-    Доступ разрешен ТОЛЬКО если студент уже отправил хотя бы 1 качественную
-    рецензию на чужую работу.
-
-    current_user_token: Анонимный идентификатор студента.
-    True, если доступ открыт, иначе False.
+    1. Студент должен сдать хотя бы одну работу (submitted_count > 0).
+    2. Количество проверенных им чужих работ должно быть >= количеству его сданных работ
+       (reviewed_count >= submitted_count).
     """
-    # Заглушка: пока доступ закрыт
-    return False
+    return submitted_count > 0 and reviewed_count >= submitted_count
 
 
 def validate_review(ratings: list[int], comment: str) -> tuple[bool, str]:
@@ -116,6 +113,25 @@ def calculate_final_score(ratings: list[int]) -> float:
         return 0.0
     return round(sum(ratings) / len(ratings), 1)
 
+
+def save_uploaded_pdf(file_bytes: bytes, filename: str) -> str:
+    """
+    Сохраняет загруженный PDF-файл в папку 'uploads' и возвращает путь к нему.
+
+    :return: Путь к сохраненному файлу (например, 'uploads/lab1_report.pdf').
+    """
+    upload_dir = "uploads"
+
+    os.makedirs(upload_dir, exist_ok=True)
+
+    file_path = os.path.join(upload_dir, filename)
+
+    with open(file_path, "wb") as f:
+        f.write(file_bytes)
+
+    return file_path
+
+
 if __name__ == "__main__":
     labs = [
         {"id": 1, "student_token": "egor", "lab_number": 1},
@@ -131,3 +147,13 @@ if __name__ == "__main__":
     sample_ratings = [5, 4, 5, 3, 4]
     print(f"Оценки: {sample_ratings} -> Средний балл:", calculate_final_score(sample_ratings))
     print("Пустой список -> Средний балл:", calculate_final_score([]))
+
+    print("\nПроверка доступа к отзывам:")
+    print("Сдал 1, проверил 0 -> Доступ:", can_view_own_reviews(1, 0))  # Ожидаем False
+    print("Сдал 1, проверил 1 -> Доступ:", can_view_own_reviews(1, 1))  # Ожидаем True
+    print("Сдал 2, проверил 1 -> Доступ:", can_view_own_reviews(2, 1))  # Ожидаем False (нужно проверить вторую!)
+
+    print("\nПроверка сохранения файла:")
+    saved_path = save_uploaded_pdf(b"%PDF-1.4 test bytes", "test_lab.pdf")
+    print("Файл сохранен по пути:", saved_path)
+    print("Файл реально существует на диске?", os.path.exists(saved_path))
