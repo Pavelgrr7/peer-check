@@ -1,5 +1,7 @@
 # Руководство по разработке: Бизнес-логика (Core Logic)
 
+> **Архив Спринта 1.** Функции отсюда заменены: `get_random_lab_for_review` → `select_lab_for_review`, `validate_review_comment` → `validate_review`, у `can_view_own_reviews` теперь два счётчика. Актуальные сигнатуры — в [контрактах](architecture_contracts.md).
+
 **Ответственный:** Егор  
 **Файл модуля:** `roulette.py` (в корне репозитория)
 
