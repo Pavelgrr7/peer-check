@@ -176,7 +176,6 @@ def hash_password(password: str) -> str:
 
     return f"{salt.hex()}${digest.hex()}"
 
-
 def check_password(password: str, password_hash: str) -> bool:
     """
     Проверяет, совпадает ли введённый пароль с сохранённым хешем.
