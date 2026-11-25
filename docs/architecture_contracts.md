@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS submissions (
 );
 ```
 
-### Таблица `reviews`: рецензии [задача #14]
+### Таблица `reviews`: рецензии [есть]
 ```sql
 CREATE TABLE IF NOT EXISTS reviews (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -91,8 +91,7 @@ DB_NAME = "peercheck.db"
 def init_db() -> None:
     """
     Создаёт файл peercheck.db и таблицы, если их ещё нет. [есть]
-    Сейчас создаёт submissions. Таблица reviews добавляется в задаче #14,
-    таблица users — в задаче #17.
+    Сейчас создаёт submissions и reviews, таблица users добавляется в задаче #17.
     """
 
 
@@ -106,18 +105,14 @@ def get_unreviewed_submissions() -> list[dict]:
     в формате, который ждёт select_lab_for_review:
     [{"id": 1, "student_token": "Скрытный Енот #427", "lab_number": 1,
       "file_path": "uploads/..."}, ...]
-    Если работ нет, возвращает [].
-
-    [есть, исправить] Сейчас возвращает объекты sqlite3.Row, у них нет .get(),
-    и select_lab_for_review на них падает. Исправление — шаг 1 задачи #14:
-    return [dict(row) for row in rows]
+    Если работ нет, возвращает []. [есть]
     """
 
 
 def add_review(lab_id: int, reviewer_token: str, ratings: list[int], comment: str) -> int:
     """
     Сохраняет рецензию: ratings[0..4] раскладывает по c1_score..c5_score,
-    у работы lab_id ставит is_reviewed = 1. Возвращает id рецензии. [задача #14]
+    у работы lab_id ставит is_reviewed = 1. Возвращает id рецензии. [есть]
     """
 
 
@@ -125,14 +120,14 @@ def get_reviews_for_student(student_token: str) -> list[dict]:
     """
     Все рецензии на работы автора student_token (JOIN reviews и submissions по lab_id).
     Каждый словарь: id, lab_id, lab_number, reviewer_token, c1_score..c5_score,
-    comment, created_at. Если рецензий нет, возвращает []. [задача #14]
+    comment, created_at. Если рецензий нет, возвращает []. [есть]
     """
 
 
 def get_student_counts(student_token: str) -> tuple[int, int]:
     """
     Возвращает (сколько работ сдал студент, сколько чужих работ он проверил).
-    Нужно для can_view_own_reviews. [задача #14]
+    Нужно для can_view_own_reviews. [есть]
     """
 
 
