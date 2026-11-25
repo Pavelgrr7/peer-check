@@ -4,6 +4,9 @@
 """
 import os
 import random
+import hashlib
+import hmac
+import uuid
 
 
 def select_lab_for_review(current_user_token: str, available_labs: list[dict]) -> dict | None:
@@ -118,18 +121,75 @@ def save_uploaded_pdf(file_bytes: bytes, filename: str) -> str:
     """
     Сохраняет загруженный PDF-файл в папку 'uploads' и возвращает путь к нему.
 
-    :return: Путь к сохраненному файлу (например, 'uploads/lab1_report.pdf').
+    Исходное имя файла (filename) намеренно НЕ используется при сохранении
+    на диске. Имя генерирует система, так как использование оригинального имени
+    приводит к двум проблемам:
+    1. Коллизии: файлы с одинаковыми именами (например, report.pdf) затирают
+       друг друга, из-за чего в базе отображается чужая работа.
+    2. Анонимность: имена вида Ivanov_lab1.pdf раскрывают личность студента,
+       что недопустимо при анонимной проверке.
+
+    :return: Путь к сохраненному файлу (например, 'uploads/a1b2c3d4....pdf').
     """
     upload_dir = "uploads"
 
     os.makedirs(upload_dir, exist_ok=True)
 
-    file_path = os.path.join(upload_dir, filename)
+    file_path = os.path.join(upload_dir, f"{uuid.uuid4().hex}.pdf")
 
     with open(file_path, "wb") as f:
         f.write(file_bytes)
 
     return file_path
+
+
+def validate_registration(email: str, password: str) -> tuple[bool, str]:
+    """
+    Проверяет форму регистрации.
+
+    Правила:
+    1. В почте есть "@".
+    2. После "@" есть точка (tpu.ru, mail.ru).
+    3. Пароль не короче 8 символов.
+
+    Возвращает (True, "OK") или (False, "Понятный текст ошибки").
+    """
+    if "@" not in email:
+        return False, "В адресе электронной почты должен быть символ '@'"
+
+    if "." not in email.split("@")[-1]:
+        return False, "После символа '@' должен быть указан домен с точкой (например, tpu.ru)"
+
+    if len(password) < 8:
+        return False, "Пароль должен содержать не менее 8 символов"
+
+    return True, "OK"
+
+
+def hash_password(password: str) -> str:
+    """
+    Возвращает строку "соль$хеш" для записи в базу (users.password_hash).
+    Одинаковые пароли дают разные строки, потому что соль каждый раз новая.
+    """
+    salt = os.urandom(16)  # 16 случайных байт
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 100_000)
+
+    return f"{salt.hex()}${digest.hex()}"
+
+
+def check_password(password: str, password_hash: str) -> bool:
+    """
+    Проверяет, совпадает ли введённый пароль с сохранённым хешем.
+    """
+    #Разделяем сохраненный хеш на соль и сам хеш
+    salt_hex, digest_hex = password_hash.split("$")
+
+    #Восстанавливаем соль из hex-строки в байты и считаем хеш для введенного пароля
+    salt = bytes.fromhex(salt_hex)
+    new_digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 100_000)
+
+    #Сравниваем результаты
+    return hmac.compare_digest(new_digest.hex(), digest_hex)
 
 
 if __name__ == "__main__":
@@ -157,3 +217,13 @@ if __name__ == "__main__":
     saved_path = save_uploaded_pdf(b"%PDF-1.4 test bytes", "test_lab.pdf")
     print("Файл сохранен по пути:", saved_path)
     print("Файл реально существует на диске?", os.path.exists(saved_path))
+
+    print("\nПроверка регистрации:")
+    print(validate_registration("student@tpu.ru", "qwerty123"))  # (True, 'OK')
+    print(validate_registration("student.tpu.ru", "qwerty123"))  # нет @
+    print(validate_registration("student@tpu.ru", "123"))        # короткий пароль
+
+    stored = hash_password("qwerty123")
+    print("Хеш:", stored)
+    print("Верный пароль:", check_password("qwerty123", stored))    # True
+    print("Неверный пароль:", check_password("qwerty124", stored))  # False
